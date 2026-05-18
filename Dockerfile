@@ -8,12 +8,12 @@ WORKDIR /app
 # تثبيت الفلاسك وأداة تحميل اليوتيوب yt-dlp
 RUN pip install flask yt-dlp
 
-# إنشاء مجلدات القوالب والفيديوهات داخل الحاوية
+# إنشاء مجلدات القوالب والفيديوهات داخل الحاوية (داخلياً فقط)
 RUN mkdir -p /app/templates /app/videos
 
-# نسخ ملفات المشروع داخل الحاوية
+# نسخ ملفات المشروع من الصفحة الرئيسية بجيت هاب إلى داخل الحاوية
 COPY app.py /app/app.py
-COPY templates/index.html /app/index.html
+COPY index.html /app/templates/index.html
 
 # فتح بورت الويب الخاص باللوحة
 EXPOSE 8080
