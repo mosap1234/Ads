@@ -10,7 +10,6 @@ ffmpeg_process = None
 
 @app.route('/')
 def index():
-    # قراءة جميع الفيديوهات المدعومة داخل المجلد
     videos = [f for f in os.listdir(VIDEO_DIR) if f.endswith(('.mp4', '.mkv', '.avi', '.mov'))]
     return render_template('index.html', videos=videos, streaming=ffmpeg_process is not None)
 
@@ -29,7 +28,6 @@ def start_stream():
     video_path = os.path.join(VIDEO_DIR, video_file)
     rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{stream_key}"
 
-    # أمر FFmpeg لبث الفيديو وتكراره بشكل نهائي وبدون معالجة ثقيلة (Copy)
     cmd = f'ffmpeg -re -stream_loop -1 -i "{video_path}" -c:v copy -c:a copy -f flv "{rtmp_url}"'
 
     try:
@@ -57,11 +55,13 @@ def download_video():
     if not youtube_url:
         return jsonify({"status": "error", "message": "الرجاء إدخال رابط يوتيوب صحيح."})
 
-    # أمر تحميل الفيديو بأفضل جودة MP4 مدمجة مباشرة إلى مجلد الفيديوهات المحدد
-    cmd = f'yt-dlp -P "{VIDEO_DIR}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --merge-output-format mp4 "{youtube_url}"'
+    # التحقق من وجود ملف الكوكيز لتمريره إلى أداة التحميل وتخطي حجب يوتيوب
+    cookies_path = "/app/cookies.txt"
+    cookies_flag = f'--cookies "{cookies_path}"' if os.path.exists(cookies_path) else ''
+
+    cmd = f'yt-dlp {cookies_flag} -P "{VIDEO_DIR}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --merge-output-format mp4 "{youtube_url}"'
 
     try:
-        # تشغيل التحميل، وبسبب سرعة السيرفر العالية سينتهي بسرعة
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode == 0:
             return jsonify({"status": "success", "message": "📥 تم تحميل الفيديو بنجاح وحفظه في السيرفر! قم بتحديث الصفحة لاختياره."})
