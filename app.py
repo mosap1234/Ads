@@ -58,8 +58,8 @@ def download_video():
     cookies_path = "/app/cookies.txt"
     cookies_flag = f'--cookies "{cookies_path}"' if os.path.exists(cookies_path) else ''
 
-    # أمر ذكي ومحدث: يفك تشفير الحماية عبر node، ويحمل أفضل جودة متاحة أياً كانت ثم يحولها فوراً وبقوة الـ ffmpeg إلى mp4 صافي
-    cmd = f'yt-dlp {cookies_flag} --js-runtimes node -P "{VIDEO_DIR}" -f "bestvideo+bestaudio/best" --merge-output-format mp4 "{youtube_url}"'
+    # هنا التعديل السحري: أضفنا الأمر المطلوب لحل شفرة يوتيوب مع تبسيط جلب الصيغة المباشرة
+    cmd = f'yt-dlp {cookies_flag} --js-runtimes node --remote-components ejs:github -P "{VIDEO_DIR}" -f "best[ext=mp4]/best" "{youtube_url}"'
 
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
