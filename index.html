@@ -114,7 +114,6 @@
         .status-on { background-color: rgba(16, 185, 129, 0.2); color: var(--success); }
         .status-off { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
-        /* قائمة الفيديوهات */
         .video-item {
             display: flex;
             justify-content: space-between;
@@ -128,7 +127,6 @@
         .video-meta { font-size: 13px; color: var(--text-muted); }
         .btn-delete { width: auto; padding: 6px 12px; font-size: 13px; background-color: var(--danger); }
 
-        /* شاشة اللوج الحي */
         .terminal {
             background-color: var(--terminal-bg);
             border: 1px solid var(--border-color);
@@ -137,12 +135,12 @@
             font-family: monospace;
             font-size: 13px;
             color: #38bdf8;
-            height: 150px;
+            height: 170px;
             overflow-y: auto;
             direction: ltr;
             text-align: left;
             white-space: pre-wrap;
-            margin-top: 15px;
+            margin-top: 10px;
             display: none;
         }
 
@@ -227,6 +225,18 @@
         </div>
         <button class="btn-primary" id="btn_download" onclick="downloadVideo()">ابدأ التحميل الآن</button>
         
+        <div class="form-group" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <label>🍪 تحديث ملف الكوكيز الذكي (cookies.txt):</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="file" id="cookies_file" accept=".txt" style="background: var(--bg-color); color: white; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; flex-grow: 1;">
+                <button class="btn-primary" style="width: auto; white-space: nowrap; padding: 0 20px; color:#000;" onclick="uploadCookies()">رفع 📤</button>
+            </div>
+        </div>
+
+        <div id="log_header" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; display: none;">
+            <label style="margin: 0;">📄 لوج التحميل الحي:</label>
+            <button class="btn-primary" id="btn_copy_log" style="width: auto; padding: 4px 12px; font-size: 13px; color: #000;" onclick="copyLog()">نسخ اللوج 📋</button>
+        </div>
         <div class="terminal" id="log_terminal"></div>
     </div>
 
@@ -287,25 +297,52 @@
             });
         }
 
+        function uploadCookies() {
+            const fileInput = document.getElementById('cookies_file');
+            if (fileInput.files.length === 0) {
+                alert("الرجاء اختيار ملف cookies.txt أولاً من جهازك!");
+                return;
+            }
+            const formData = new FormData();
+            formData.append('cookies_file', fileInput.files[0]);
+
+            fetch('/upload_cookies', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.status === 'success') location.reload();
+            });
+        }
+
+        function copyLog() {
+            const terminal = document.getElementById('log_terminal');
+            if (!terminal.innerText.trim()) {
+                alert("لا يوجد لوج لنسخه حالياً!");
+                return;
+            }
+            navigator.clipboard.writeText(terminal.innerText)
+            .then(() => alert("📋 تم نسخ اللوج بالكامل إلى الحافظة!"))
+            .catch(err => alert("فشل النسخ: " + err));
+        }
+
         function downloadVideo() {
             const url = document.getElementById('youtube_url').value;
             if(!url) { alert("الرجاء وضع رابط صحيح"); return; }
 
             const btn = document.getElementById('btn_download');
             const terminal = document.getElementById('log_terminal');
+            const logHeader = document.getElementById('log_header');
             
             btn.disabled = true;
             btn.innerText = "جاري الاتصال والتحميل...";
             terminal.style.display = "block";
+            logHeader.style.display = "flex";
             terminal.innerHTML = "بدء الاتصال بالسيرفر...\n";
 
-            // فتح قناة بث اللوج الحي (EventSource)
             const eventSource = new EventSource(`/download_progress?url=${encodeURIComponent(url)}`);
 
             eventSource.onmessage = function(event) {
-                // إضافة السطر الجديد إلى شاشة اللوج
                 terminal.innerHTML += event.data + "\n";
-                // النزول التلقائي لأسفل الشاشة السوداء لمتابعة التحديثات
                 terminal.scrollTop = terminal.scrollHeight;
 
                 if (event.data.includes("[DONE]") || event.data.includes("[ERROR]")) {
