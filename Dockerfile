@@ -13,7 +13,7 @@ RUN mkdir -p /app/templates /app/videos
 
 # نسخ ملفات المشروع داخل الحاوية
 COPY app.py /app/app.py
-COPY templates/index.html /app/templates/index.html
+COPY templates/index.html /app/index.html
 
 # فتح بورت الويب الخاص باللوحة
 EXPOSE 8080
