@@ -64,7 +64,6 @@ def logout():
 
 @app.route('/upload_cookies', methods=['POST'])
 def upload_cookies():
-    """استقبال ملف الكوكيز وحفظه مباشرة في السيرفر"""
     if ADMIN_PASSWORD and not session.get('logged_in'):
         return jsonify({"status": "error", "message": "غير مصرح لك"})
         
@@ -76,7 +75,6 @@ def upload_cookies():
         return jsonify({"status": "error", "message": "اسم الملف فارغ!"})
         
     try:
-        # حفظ الملف مباشرة باسم cookies.txt لتستخدمه أداة yt-dlp فوراً
         file.save("/app/cookies.txt")
         return jsonify({"status": "success", "message": "🍪 تم رفع وتحديث ملف الكوكيز بنجاح في السيرفر!"})
     except Exception as e:
@@ -147,7 +145,12 @@ def download_progress():
     cookies_path = "/app/cookies.txt"
     cookies_flag = f'--cookies "{cookies_path}"' if os.path.exists(cookies_path) else ''
 
-    cmd = f'yt-dlp {cookies_flag} --js-runtimes node --remote-components ejs:github --newline -P "{VIDEO_DIR}" -f "best[ext=mp4]/best" "{youtube_url}"'
+    # تم إضافة الإعدادات الاحترافية لتسريع التحميل بشكل خارق عبر 10 خيوط تحميل متوازية وتعديل الفرمتة
+    cmd = (
+        f'yt-dlp {cookies_flag} --js-runtimes node --remote-components ejs:github --newline '
+        f'--concurrent-fragments 10 --buffer-size 16K '
+        f'-P "{VIDEO_DIR}" -f "bv*[ext=mp4]+ba[ext=m4a]/best[ext=mp4]/best" "{youtube_url}"'
+    )
 
     def generate():
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
