@@ -55,11 +55,11 @@ def download_video():
     if not youtube_url:
         return jsonify({"status": "error", "message": "الرجاء إدخال رابط يوتيوب صحيح."})
 
-    # التحقق من وجود ملف الكوكيز لتمريره إلى أداة التحميل وتخطي حجب يوتيوب
     cookies_path = "/app/cookies.txt"
     cookies_flag = f'--cookies "{cookies_path}"' if os.path.exists(cookies_path) else ''
 
-    cmd = f'yt-dlp {cookies_flag} -P "{VIDEO_DIR}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --merge-output-format mp4 "{youtube_url}"'
+    # أمر ذكي ومحدث: يفك تشفير الحماية عبر node، ويحمل أفضل جودة متاحة أياً كانت ثم يحولها فوراً وبقوة الـ ffmpeg إلى mp4 صافي
+    cmd = f'yt-dlp {cookies_flag} --js-runtimes node -P "{VIDEO_DIR}" -f "bestvideo+bestaudio/best" --merge-output-format mp4 "{youtube_url}"'
 
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
